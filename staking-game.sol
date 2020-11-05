@@ -544,7 +544,7 @@ abstract contract IRewardDistributionRecipient is Ownable {
 
     function setRewardDistribution(address _rewardDistribution)
         external
-        onlyOwner
+        onlyRewardDistribution
     {
         rewardDistribution = _rewardDistribution;
     }
@@ -593,9 +593,7 @@ contract NsurePoolReward is LPTokenWrapper, IRewardDistributionRecipient {
     IERC20 public Nsure = IERC20(0x7FAE2E2A9d06398b3b116fA301519dC5f41FbD9B);
     uint256 public DURATION = 14 days;
 
-    // uint256 public initreward = 3500*1e18;
     bool public isPause;
-    uint256 public starttime = 1604310322; //08/24/2020 @ 4:00pm (UTC)
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
     uint256 public lastUpdateTime;
@@ -618,7 +616,11 @@ contract NsurePoolReward is LPTokenWrapper, IRewardDistributionRecipient {
         _;
     }
 
-    function updateDuration(uint256 _amount) external onlyRewardDistribution {
+    constructor () public {
+        rewardDistribution = _msgSender();
+    }
+
+    function updateDuration(uint256 _amount) external onlyOwner {
         DURATION = _amount;
     }
 
@@ -649,13 +651,13 @@ contract NsurePoolReward is LPTokenWrapper, IRewardDistributionRecipient {
     }
 
     // stake visibility is public as overriding LPTokenWrapper's stake() function
-    function stake(uint256 amount) public updateReward(msg.sender) override  checkPause  checkStart{ 
+    function stake(uint256 amount) public updateReward(msg.sender) override  checkPause  { 
         require(amount > 0, "Cannot stake 0");
         super.stake(amount);
         emit Staked(msg.sender, amount);
     }
 
-    function withdraw(uint256 amount) public updateReward(msg.sender)  override checkPause  checkStart{
+    function withdraw(uint256 amount) public updateReward(msg.sender)  override checkPause  {
         require(amount > 0, "Cannot withdraw 0");
         super.withdraw(amount);
         emit Withdrawn(msg.sender, amount);
@@ -666,7 +668,7 @@ contract NsurePoolReward is LPTokenWrapper, IRewardDistributionRecipient {
         getReward();
     }
 
-    function getReward() public updateReward(msg.sender)  checkPause checkStart{
+    function getReward() public updateReward(msg.sender)  checkPause {
         uint256 reward = earned(msg.sender);
         if (reward > 0) {
             rewards[msg.sender] = 0;
@@ -675,26 +677,11 @@ contract NsurePoolReward is LPTokenWrapper, IRewardDistributionRecipient {
         }
     }
     
-    function updatePause() external onlyRewardDistribution {
+    function updatePause() external onlyOwner {
         isPause = !isPause;
     }
 
-    // modifier checkhalve(){
-    //     if (block.timestamp >= periodFinish) {
-    //         initreward = initreward.mul(50).div(100); 
-    //         jfi.mint(address(this),initreward);
 
-    //         rewardRate = initreward.div(DURATION);
-    //         periodFinish = block.timestamp.add(DURATION);
-    //         emit RewardAdded(initreward);
-    //     }
-    //     _;
-    // }
-    modifier checkStart(){
-        require(block.timestamp > starttime,"not start");
-        _;
-    }
-    
     modifier checkPause(){
         require(!isPause,"pause");
         _;
