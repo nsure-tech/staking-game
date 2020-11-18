@@ -10,7 +10,7 @@
 
 > Stake amount Nsure in the pool.
 
-### withdraw
+### withdraw(uint256 amount)
 
 > Withdraw all the Nsure you staked. 
 
