@@ -12,7 +12,7 @@
 
 ### withdraw(uint256 amount)
 
-> Withdraw all the Nsure you staked. 
+> Withdraw exact amount Nsure which you staked. 
 
 ### earned(address account)
 
